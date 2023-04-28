@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Matrix output
         id: matrix_output
-        run: echo "Output from matrix: ${{ matrix.example }}"
+        run: echo "Output from matrix:${{ matrix.example }}"
         env:
           MATRIX_VALUE: ${{ matrix.example }}
       - name: Set output
@@ -26,4 +26,4 @@ jobs:
         job1_outputs: ${{ needs.job1.outputs.output }}
     steps:
       - name: Use output from job1
-        run: echo "Received output from job1: ${{ matrix.job1_outputs }}"
+        run: echo "Received output from job1:${{ matrix.job1_outputs }}"
