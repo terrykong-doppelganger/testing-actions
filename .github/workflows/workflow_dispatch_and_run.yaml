@@ -1,0 +1,23 @@
+name: Nightly Pax build
+run-name: Nightly Pax build (${{ github.event_name == 'workflow_run' && format('nightly {0}', github.event.workflow_run.created_at) || github.event_name }})
+
+on:
+  workflow_run:
+    workflows: [Nightly JAX build]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      PUBLISH:
+        type: boolean
+        description: Publish nightly images and update the 'latest' tag?
+        default: false
+        required: false
+
+jobs:
+
+  metadata:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Set build date
+        run: env
