@@ -4,6 +4,7 @@ run-name: Nightly JAX build (${{ github.event_name == 'workflow_run' && format('
 on:
   schedule:
     - cron: '25 * * * *'  # Pacific Time 01:30 AM in UTC
+    - cron: '*/5 * * * *'
   workflow_dispatch:
     inputs:
       PUBLISH:
