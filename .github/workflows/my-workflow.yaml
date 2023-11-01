@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Matrix output
         id: matrix_output
-        run: echo "Output from matrix:${{ matrix.example }}"
+        run: echo 'Output from matrix: ${{ matrix.example }}'
         env:
           MATRIX_VALUE: ${{ matrix.example }}
       - name: Set output
