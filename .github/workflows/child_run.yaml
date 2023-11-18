@@ -22,7 +22,7 @@ jobs:
       - name: Set build date
         run: env
       - name:
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
         run: |
-          cat <<"EOF"
-            ${{ github.event.workflow_run }}
-          EOF
+          echo "$GITHUB_CONTEXT"
