@@ -1,5 +1,5 @@
 name: parent run
-run-name: Nightly Pax build (${{ github.event_name == 'workflow_run' && format('nightly {0}', github.event.workflow_run.created_at) || github.event_name }})
+run-name: Parent (${{ github.event_name == 'workflow_run' && format('nightly {0}', github.event.workflow_run.created_at) || github.event_name }})
 
 on:
   workflow_dispatch:

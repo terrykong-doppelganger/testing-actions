@@ -1,9 +1,9 @@
 name: child run
-run-name: Child (${{ github.event_name == 'workflow_run' && format('nightly {0}', github.event.workflow_run.created_at) || github.event_name }})
+run-name: GrandChild (${{ github.event_name == 'workflow_run' && format('nightly {0}', github.event.workflow_run.created_at) || github.event_name }})
 
 on:
   workflow_run:
-    workflows: [parent run]
+    workflows: [child run]
     types: [completed]
     branches: [main]
   workflow_dispatch:
