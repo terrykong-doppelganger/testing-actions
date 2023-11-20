@@ -14,6 +14,10 @@ on:
         default: false
         required: false
 
+
+permissions:
+  contents: read  # to fetch code
+
 jobs:
 
   metadata:
