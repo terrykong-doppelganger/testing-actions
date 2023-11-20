@@ -17,3 +17,10 @@ jobs:
     steps:
       - name: Set build date
         run: env
+      - name: Save branch-name
+        run: |
+          echo nightly-${{ github.run_id }} > ./trial-branch.txt
+      - uses: actions/upload-artifact@v3
+        with:
+          name: trial-branch
+          path: trial-branch.txt

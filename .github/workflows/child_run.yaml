@@ -26,3 +26,41 @@ jobs:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: |
           echo "$GITHUB_CONTEXT"
+  
+  download:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Download artifact'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               run_id: context.payload.workflow_run.id,
+            });
+            let matchArtifact = allArtifacts.data.artifacts.filter((artifact) => {
+              return artifact.name == "trial-branch"
+            })[0];
+            let download = await github.rest.actions.downloadArtifact({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               artifact_id: matchArtifact.id,
+               archive_format: 'zip',
+            });
+            let fs = require('fs');
+            fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/trial-branch.zip`, Buffer.from(download.data));
+
+      - name: 'Unzip artifact'
+        run: unzip trial-branch.zip
+
+      - name: 'View the branch'
+        run: |
+          ls -lah 
+          cat trial*
+
+      - name: 'Repackage it'
+        uses: actions/upload-artifact@v3
+        with:
+          name: trial-branch
+          path: trial-branch.txt
