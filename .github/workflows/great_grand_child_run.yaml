@@ -36,7 +36,7 @@ jobs:
           echo "$GITHUB_CONTEXT"
   waitForWorkflows:
     name: Wait for workflows
-    uses: ./.github/workflows/_wip.yaml
+    uses: ./.github/workflows/_wfw.yaml
     secrets: inherit
 
   afterWait:
