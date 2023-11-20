@@ -35,9 +35,10 @@ jobs:
         run: |
           echo "$GITHUB_CONTEXT"
   waitForWorkflows:
-    name: Wait for workflows
-    uses: ./.github/workflows/_wfw.yaml
-    secrets: inherit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ahmadnassri/action-workflow-run-wait@v1
 
   afterWait:
     name: after-wait
@@ -45,11 +46,13 @@ jobs:
     runs-on: ubuntu-22.04
     if: always()
     steps:
-      - name:
+      - name: run
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: |
           echo "$GITHUB_CONTEXT"
+      - name: test
+        run: echo ${{needs.waitForWorkflows.result}}
       - name: Check needs results
         if: needs.waitForWorkflows.result != 'success'
         run: exit 1
