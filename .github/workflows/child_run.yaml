@@ -14,9 +14,10 @@ on:
         default: false
         required: false
 
-
 permissions:
   contents: read  # to fetch code
+  actions:  write # to cancel previous workflows
+  packages: write # to upload container
 
 jobs:
 
