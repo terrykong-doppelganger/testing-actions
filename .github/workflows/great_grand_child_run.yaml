@@ -38,8 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      #- uses: ahmadnassri/action-workflow-run-wait@v1
-      - uses: terrykong/action-workflow-run-wait@debug
+      - uses: ahmadnassri/action-workflow-run-wait@v1
 
   afterWait:
     name: after-wait
