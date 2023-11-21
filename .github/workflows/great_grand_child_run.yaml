@@ -80,7 +80,6 @@ jobs:
         env:
           MAX_TIMEOUT: 120
           POLLING_INTERVAL: 10
-          EXCLUDE_WORKFLOW_IDS: ${{ inputs.exclude-workflow-ids }}
           WORKFLOW_RUN_ID: ${{ github.run_id }}
           THIS_WORKFLOW_NAME: ${{ env.workflow_name }}
           MAX_WORKFLOWS: ${{ env.MAX_WORKFLOWS }}
@@ -89,7 +88,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           result-encoding: string
           script: |
-            async function checkWorkflows(github, context, EXCLUDE_WORKFLOW_IDS, WORKFLOW_RUN_ID, THIS_WORKFLOW_NAME, MAX_WORKFLOWS) {
+            async function checkWorkflows(github, context, WORKFLOW_RUN_ID, THIS_WORKFLOW_NAME, MAX_WORKFLOWS) {
               const { DEBUG, GITHUB_SHA } = process.env
   
               // https://octokit.github.io/rest.js/v19#actions-list-workflow-runs-for-repo
@@ -154,13 +153,11 @@ jobs:
             if (DEBUG) {
               console.log(`process.env.MAX_TIMEOUT: ${process.env.MAX_TIMEOUT}`)
               console.log(`process.env.POLLING_INTERVAL: ${process.env.POLLING_INTERVAL}`)
-              console.log(`process.env.EXCLUDE_WORKFLOW_IDS: ${process.env.EXCLUDE_WORKFLOW_IDS}`)
               console.log("context:", context)
             }
   
             const MAX_TIMEOUT = Number(process.env.MAX_TIMEOUT)
             const POLLING_INTERVAL = Number(process.env.POLLING_INTERVAL)
-            const EXCLUDE_WORKFLOW_IDS = process.env.EXCLUDE_WORKFLOW_IDS == "" ? [] : process.env.EXCLUDE_WORKFLOW_IDS.split(",")
             const WORKFLOW_RUN_ID = Number(process.env.WORKFLOW_RUN_ID)
             const THIS_WORKFLOW_NAME = process.env.THIS_WORKFLOW_NAME
             const MAX_WORKFLOWS = Number(process.env.MAX_WORKFLOWS)
@@ -168,7 +165,6 @@ jobs:
             if (DEBUG) {
               console.log(`MAX_TIMEOUT: ${MAX_TIMEOUT}`)
               console.log(`POLLING_INTERVAL: ${POLLING_INTERVAL}`)
-              console.log(`EXCLUDE_WORKFLOW_IDS: ${EXCLUDE_WORKFLOW_IDS}`)
               console.log(`THIS_WORKFLOW_NAME: ${THIS_WORKFLOW_NAME}`)
               console.log(`MAX_WORKFLOWS: ${MAX_WORKFLOWS}`)
             }
@@ -178,7 +174,7 @@ jobs:
             await sleep(5)
   
             console.log(`Waiting time ${timer}s out of ${MAX_TIMEOUT}s with polling interval ${POLLING_INTERVAL}s`);
-            while (timer < MAX_TIMEOUT && (await checkWorkflows(github, context, EXCLUDE_WORKFLOW_IDS, WORKFLOW_RUN_ID, THIS_WORKFLOW_NAME, MAX_WORKFLOWS))) {
+            while (timer < MAX_TIMEOUT && (await checkWorkflows(github, context, WORKFLOW_RUN_ID, THIS_WORKFLOW_NAME, MAX_WORKFLOWS))) {
               await sleep(POLLING_INTERVAL)
               timer += POLLING_INTERVAL
               console.log(`Waiting time ${timer}s out of ${MAX_TIMEOUT}s with polling interval ${POLLING_INTERVAL}s`);
