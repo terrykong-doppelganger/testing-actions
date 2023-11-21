@@ -23,7 +23,7 @@ permissions:
   packages: write # to upload container
 
 env:
-  workflow_name: great grandchild run
+  workflow_name: Great GrandChild
 
 jobs:
 
