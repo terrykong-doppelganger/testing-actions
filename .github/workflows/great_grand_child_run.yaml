@@ -140,6 +140,7 @@ jobs:
                 return true
               }
               // Getting here means THIS_WORKFLOW > 0 and this isn't the largest run id, so we can safely kill it
+              console.log(`This is not the largest run id so we can safely kill it`);
               process.exit(2)
             }
   
