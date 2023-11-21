@@ -199,5 +199,5 @@ jobs:
       - name: print kill status
         run: echo ${{ needs.kill.result }}
       - name: Cancel workflow if upstream workflow did not success
-        if: needs.kill.result == "success"
+        if: needs.kill.result == 'success'
         uses: styfle/cancel-workflow-action@0.12.0
