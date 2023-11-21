@@ -56,6 +56,14 @@ jobs:
   #    - name: Check needs results
   #      if: needs.waitForWorkflows.result != 'success'
   #      run: exit 1
+  json:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: env
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT"
   kill:
     runs-on: ubuntu-22.04
     needs: metadata
