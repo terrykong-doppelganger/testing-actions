@@ -104,7 +104,7 @@ jobs:
               //  (run) => !EXCLUDE_WORKFLOW_RUN_IDS.includes(run.id) && !EXCLUDE_WORKFLOW_NAMES.includes(run.name) && !EXCLUDE_WORKFLOW_IDS.includes(run.workflow_id) && (run.status == 'queued' || run.status == 'in_progress')
               //);
               const PENDING_WORKFLOWS = WORKFLOW_RUNS_FOR_REPO_RESPONSE.data.workflow_runs.filter(
-                (run) => (run.name == THIS_WORKFLOW_NAME)
+                (run) => (run.name.startsWith(THIS_WORKFLOW_NAME))
               );
   
               if (PENDING_WORKFLOWS.length > 0) {
