@@ -23,7 +23,8 @@ permissions:
   packages: write # to upload container
 
 env:
-  workflow_name: Great GrandChild
+  # The check is based on the run-name, not name. Given the suffix involves a date, we only check the prefix
+  THIS_WORKFLOW_NAME_PREFIX: Great GrandChild
   # This should match the number of runs in on.workflow_run.workflows[] | length
   MAX_WORKFLOWS: 3
 
@@ -81,14 +82,14 @@ jobs:
           MAX_TIMEOUT: 120
           POLLING_INTERVAL: 10
           WORKFLOW_RUN_ID: ${{ github.run_id }}
-          THIS_WORKFLOW_NAME: ${{ env.workflow_name }}
+          THIS_WORKFLOW_NAME_PREFIX: ${{ env.THIS_WORKFLOW_NAME_PREFIX }}
           MAX_WORKFLOWS: ${{ env.MAX_WORKFLOWS }}
           DEBUG: "true"
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           result-encoding: string
           script: |
-            async function checkWorkflows(github, context, WORKFLOW_RUN_ID, THIS_WORKFLOW_NAME, MAX_WORKFLOWS) {
+            async function checkWorkflows(github, context, WORKFLOW_RUN_ID, THIS_WORKFLOW_NAME_PREFIX, MAX_WORKFLOWS) {
               const { DEBUG, GITHUB_SHA } = process.env
   
               // https://octokit.github.io/rest.js/v19#actions-list-workflow-runs-for-repo
@@ -106,7 +107,7 @@ jobs:
   
               // These are all the instances of this workflow, excluding this run.
               const THIS_WORKFLOW = WORKFLOW_RUNS_FOR_REPO_RESPONSE.data.workflow_runs.filter(
-                (run) => (run.name.startsWith(THIS_WORKFLOW_NAME) && run.id !== WORKFLOW_RUN_ID)
+                (run) => (run.name.startsWith(THIS_WORKFLOW_NAME_PREFIX) && run.id !== WORKFLOW_RUN_ID)
               );
               // Find the largest run.id in THIS_WORKFLOW
               let largestRunId = Number.MIN_SAFE_INTEGER;
@@ -159,13 +160,13 @@ jobs:
             const MAX_TIMEOUT = Number(process.env.MAX_TIMEOUT)
             const POLLING_INTERVAL = Number(process.env.POLLING_INTERVAL)
             const WORKFLOW_RUN_ID = Number(process.env.WORKFLOW_RUN_ID)
-            const THIS_WORKFLOW_NAME = process.env.THIS_WORKFLOW_NAME
+            const THIS_WORKFLOW_NAME_PREFIX = process.env.THIS_WORKFLOW_NAME_PREFIX
             const MAX_WORKFLOWS = Number(process.env.MAX_WORKFLOWS)
   
             if (DEBUG) {
               console.log(`MAX_TIMEOUT: ${MAX_TIMEOUT}`)
               console.log(`POLLING_INTERVAL: ${POLLING_INTERVAL}`)
-              console.log(`THIS_WORKFLOW_NAME: ${THIS_WORKFLOW_NAME}`)
+              console.log(`THIS_WORKFLOW_NAME_PREFIX: ${THIS_WORKFLOW_NAME_PREFIX}`)
               console.log(`MAX_WORKFLOWS: ${MAX_WORKFLOWS}`)
             }
   
@@ -174,7 +175,7 @@ jobs:
             await sleep(5)
   
             console.log(`Waiting time ${timer}s out of ${MAX_TIMEOUT}s with polling interval ${POLLING_INTERVAL}s`);
-            while (timer < MAX_TIMEOUT && (await checkWorkflows(github, context, WORKFLOW_RUN_ID, THIS_WORKFLOW_NAME, MAX_WORKFLOWS))) {
+            while (timer < MAX_TIMEOUT && (await checkWorkflows(github, context, WORKFLOW_RUN_ID, THIS_WORKFLOW_NAME_PREFIX, MAX_WORKFLOWS))) {
               await sleep(POLLING_INTERVAL)
               timer += POLLING_INTERVAL
               console.log(`Waiting time ${timer}s out of ${MAX_TIMEOUT}s with polling interval ${POLLING_INTERVAL}s`);
