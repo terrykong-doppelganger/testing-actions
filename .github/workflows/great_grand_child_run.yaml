@@ -206,9 +206,8 @@ jobs:
         if: needs.kill.outputs.status != 'success'
         uses: octokit/request-action@v2.x
         with:
-          route: POST /repos/{owner}/{repo}/actions/runs/{run_id}/cancel
-          owner: terrykong-doppelganger
-          repo: ${{ github.repository }}
+          route: POST /repos/{repository}/actions/runs/{run_id}/cancel
+          repository: ${{ github.repository }}
           run_id: ${{ github.run_id }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
