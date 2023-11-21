@@ -69,9 +69,9 @@ jobs:
   kill:
     runs-on: ubuntu-22.04
     needs: metadata
+    continue-on-error: true
     steps:
       - name: kill if not latest
-        continue-on-error: true
         uses: actions/github-script@e69ef5462fd455e02edcaf4dd7708eda96b9eda0 # v7.0.0
         env:
           MAX_TIMEOUT: 120
@@ -199,5 +199,5 @@ jobs:
       - name: print kill status
         run: echo ${{ needs.kill.result }}
       - name: Cancel workflow if upstream workflow did not success
-        if: needs.kill.result == 'success'
+        if: needs.kill.result != 'success'
         uses: styfle/cancel-workflow-action@0.12.0
