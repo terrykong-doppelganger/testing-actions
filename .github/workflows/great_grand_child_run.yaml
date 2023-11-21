@@ -24,6 +24,7 @@ permissions:
 
 env:
   workflow_name: Great GrandChild
+  # This should match the number of runs in on.workflow_run.workflows[] | length
   MAX_WORKFLOWS: 3
 
 jobs:
@@ -69,13 +70,12 @@ jobs:
     runs-on: ubuntu-22.04
     needs: metadata
     steps:
-      - name: wait-for-workflows
-        id: wfw
+      - name: kill if not latest
+        continue-on-error: true
         uses: actions/github-script@e69ef5462fd455e02edcaf4dd7708eda96b9eda0 # v7.0.0
         env:
           MAX_TIMEOUT: 120
           POLLING_INTERVAL: 10
-          EXCLUDE_WORKFLOW_NAMES: ${{ inputs.exclude-workflow-names }}
           EXCLUDE_WORKFLOW_IDS: ${{ inputs.exclude-workflow-ids }}
           WORKFLOW_RUN_ID: ${{ github.run_id }}
           THIS_WORKFLOW_NAME: ${{ env.workflow_name }}
@@ -85,7 +85,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           result-encoding: string
           script: |
-            async function checkWorkflows(github, context, EXCLUDE_WORKFLOW_NAMES, EXCLUDE_WORKFLOW_IDS, WORKFLOW_RUN_ID, THIS_WORKFLOW_NAME, MAX_WORKFLOWS) {
+            async function checkWorkflows(github, context, EXCLUDE_WORKFLOW_IDS, WORKFLOW_RUN_ID, THIS_WORKFLOW_NAME, MAX_WORKFLOWS) {
               const { DEBUG, GITHUB_SHA } = process.env
   
               // https://octokit.github.io/rest.js/v19#actions-list-workflow-runs-for-repo
@@ -101,14 +101,11 @@ jobs:
                 console.log("workflow_runs:", workflows)
               }
   
-              // pending workflows
-              //const PENDING_WORKFLOWS = WORKFLOW_RUNS_FOR_REPO_RESPONSE.data.workflow_runs.filter(
-              //  (run) => !EXCLUDE_WORKFLOW_RUN_IDS.includes(run.id) && !EXCLUDE_WORKFLOW_NAMES.includes(run.name) && !EXCLUDE_WORKFLOW_IDS.includes(run.workflow_id) && (run.status == 'queued' || run.status == 'in_progress')
-              //);
+              // These are all the instances of this workflow, excluding this run.
               const THIS_WORKFLOW = WORKFLOW_RUNS_FOR_REPO_RESPONSE.data.workflow_runs.filter(
                 (run) => (run.name.startsWith(THIS_WORKFLOW_NAME) && run.id !== WORKFLOW_RUN_ID)
               );
-              // Find the lowest run.id in PENDING_WORKFLOWS
+              // Find the largest run.id in THIS_WORKFLOW
               let largestRunId = Number.MIN_SAFE_INTEGER;
               WORKFLOW_RUNS_FOR_REPO_RESPONSE.data.workflow_runs.forEach((run) => {
                 if (run.id > largestRunId) {
@@ -129,7 +126,7 @@ jobs:
   
               if (isLargestRunId) {
                 if (THIS_WORKFLOW.length === (MAX_WORKFLOWS - 1)) {
-                  console.log("This is the lowest run.id and all workflows have been been started. This is the workflow that shall run");
+                  console.log("This is the largest run.id and all workflows have been been started. This is the workflow that shall run");
                   return false;
                 } else {
                   console.log("Since this is the lowest run.id, but not all workflows have started");
@@ -153,14 +150,12 @@ jobs:
             if (DEBUG) {
               console.log(`process.env.MAX_TIMEOUT: ${process.env.MAX_TIMEOUT}`)
               console.log(`process.env.POLLING_INTERVAL: ${process.env.POLLING_INTERVAL}`)
-              console.log(`process.env.EXCLUDE_WORKFLOW_NAMES: ${process.env.EXCLUDE_WORKFLOW_NAMES}`)
               console.log(`process.env.EXCLUDE_WORKFLOW_IDS: ${process.env.EXCLUDE_WORKFLOW_IDS}`)
               console.log("context:", context)
             }
   
             const MAX_TIMEOUT = Number(process.env.MAX_TIMEOUT)
             const POLLING_INTERVAL = Number(process.env.POLLING_INTERVAL)
-            const EXCLUDE_WORKFLOW_NAMES = process.env.EXCLUDE_WORKFLOW_NAMES == "" ? [] : process.env.EXCLUDE_WORKFLOW_NAMES.split(",")
             const EXCLUDE_WORKFLOW_IDS = process.env.EXCLUDE_WORKFLOW_IDS == "" ? [] : process.env.EXCLUDE_WORKFLOW_IDS.split(",")
             const WORKFLOW_RUN_ID = Number(process.env.WORKFLOW_RUN_ID)
             const THIS_WORKFLOW_NAME = process.env.THIS_WORKFLOW_NAME
@@ -169,7 +164,6 @@ jobs:
             if (DEBUG) {
               console.log(`MAX_TIMEOUT: ${MAX_TIMEOUT}`)
               console.log(`POLLING_INTERVAL: ${POLLING_INTERVAL}`)
-              console.log(`EXCLUDE_WORKFLOW_NAMES: ${EXCLUDE_WORKFLOW_NAMES}`)
               console.log(`EXCLUDE_WORKFLOW_IDS: ${EXCLUDE_WORKFLOW_IDS}`)
               console.log(`THIS_WORKFLOW_NAME: ${THIS_WORKFLOW_NAME}`)
               console.log(`MAX_WORKFLOWS: ${MAX_WORKFLOWS}`)
@@ -180,7 +174,7 @@ jobs:
             await sleep(5)
   
             console.log(`Waiting time ${timer}s out of ${MAX_TIMEOUT}s with polling interval ${POLLING_INTERVAL}s`);
-            while (timer < MAX_TIMEOUT && (await checkWorkflows(github, context, EXCLUDE_WORKFLOW_NAMES, EXCLUDE_WORKFLOW_IDS, WORKFLOW_RUN_ID, THIS_WORKFLOW_NAME, MAX_WORKFLOWS))) {
+            while (timer < MAX_TIMEOUT && (await checkWorkflows(github, context, EXCLUDE_WORKFLOW_IDS, WORKFLOW_RUN_ID, THIS_WORKFLOW_NAME, MAX_WORKFLOWS))) {
               await sleep(POLLING_INTERVAL)
               timer += POLLING_INTERVAL
               console.log(`Waiting time ${timer}s out of ${MAX_TIMEOUT}s with polling interval ${POLLING_INTERVAL}s`);
@@ -191,3 +185,19 @@ jobs:
               process.exit(1)
             }
 
+  
+  afterWait:
+    name: after-wait
+    needs: [kill]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: github dump
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT"
+      - name: print kill status
+        run: echo ${{ needs.kill.result }}
+      - name: Cancel workflow if upstream workflow did not success
+        if: needs.kill.result == "success"
+        uses: styfle/cancel-workflow-action@0.12.0
