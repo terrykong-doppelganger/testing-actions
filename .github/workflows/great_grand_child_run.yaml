@@ -102,7 +102,7 @@ jobs:
   
               if (DEBUG) {
                 console.log("workflow_runs length:", WORKFLOW_RUNS_FOR_REPO_RESPONSE.data.workflow_runs.length)
-                const workflows = WORKFLOW_RUNS_FOR_REPO_RESPONSE.data.workflow_runs.reduce((acc, val) => acc.concat([{ run_id: val.id, name: val.name, workflow_id: val.workflow_id, run_attempt: val.run_attempt }]), [])
+                const workflows = WORKFLOW_RUNS_FOR_REPO_RESPONSE.data.workflow_runs.reduce((acc, val) => acc.concat([{ run_id: val.id, name: val.name, workflow_id: val.workflow_id, run_attempt: val.run_attempt, status: val.status }]), [])
                 console.log("workflow_runs:", workflows)
               }
   
