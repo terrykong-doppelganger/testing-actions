@@ -70,6 +70,7 @@ jobs:
           EXCLUDE_WORKFLOW_IDS: ${{ inputs.exclude-workflow-ids }}
           WORKFLOW_RUN_ID: ${{ github.run_id }}
           THIS_WORKFLOW_NAME: ${{ env.workflow_name }}
+          DEBUG: "true"
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           result-encoding: string
