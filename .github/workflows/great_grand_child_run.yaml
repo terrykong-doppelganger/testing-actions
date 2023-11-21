@@ -69,9 +69,13 @@ jobs:
   kill:
     runs-on: ubuntu-22.04
     needs: metadata
-    continue-on-error: true
+    outputs:
+      # Outcome is before continue-on-error is appled and conclusion is after
+      status: ${{ steps.k_step.outcome }}
     steps:
       - name: kill if not latest
+        id: k_step
+        continue-on-error: true
         uses: actions/github-script@e69ef5462fd455e02edcaf4dd7708eda96b9eda0 # v7.0.0
         env:
           MAX_TIMEOUT: 120
@@ -197,7 +201,17 @@ jobs:
         run: |
           echo "$GITHUB_CONTEXT"
       - name: print kill status
-        run: echo ${{ needs.kill.result }}
+        run: echo ${{ needs.kill.outputs.status }}
       - name: Cancel workflow if upstream workflow did not success
-        if: needs.kill.result != 'success'
-        uses: styfle/cancel-workflow-action@0.12.0
+        if: needs.kill.outputs.status != 'success'
+        uses: octokit/request-action@v2.x
+        with:
+          route: POST /repos/{owner}/{repo}/actions/runs/{run_id}/cancel
+          owner: terrykong-doppelganger
+          repo: ${{ github.repository }}
+          run_id: ${{ github.run_id }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Dummy wait if things were not successful
+        if: needs.kill.outputs.status != 'success'
+        run: sleep 60
