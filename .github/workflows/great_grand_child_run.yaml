@@ -32,7 +32,7 @@ jobs:
   save_parent:
     runs-on: ubuntu-22.04
     steps:
-      - name: Save Parent workflow_id: ${{ github.event.workflow_run.id }}
+      - name: Save Parent workflow_id ${{ github.event.workflow_run.id }}
         run: echo ${{ github.event.workflow_run.id }} | tee parent-run-id.txt
       - uses: actions/upload-artifact@v3
         with:
