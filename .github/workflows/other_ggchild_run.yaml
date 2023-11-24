@@ -32,7 +32,7 @@ jobs:
         with:
           name: parent-run-id
           path: parent-run-id.txt
-  json:
+  metadata:
     runs-on: ubuntu-22.04
     steps:
       - name: env
