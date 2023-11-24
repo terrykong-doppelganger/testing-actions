@@ -33,6 +33,7 @@ jobs:
           name: parent-run-id
           path: parent-run-id.txt
   metadata:
+    needs: save_parent
     runs-on: ubuntu-22.04
     steps:
       - name: env
