@@ -1,0 +1,82 @@
+name: other great grandchild run
+run-name: OTHER Great GrandChild (${{ github.event_name == 'workflow_run' && format('nightly {0}', github.event.workflow_run.created_at) || github.event_name }})
+
+on:
+  workflow_run:
+    workflows:
+      - parent run
+      - child run
+      - grandchild run
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      PUBLISH:
+        type: boolean
+        description: Publish nightly images and update the 'latest' tag?
+        default: false
+        required: false
+
+permissions:
+  contents: write # to fetch code, and create commits
+  actions:  write # to cancel previous workflows
+  packages: write # to upload container
+
+jobs:
+  save_parent:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Save Parent workflow_id ${{ github.event.workflow_run.id }}
+        run: echo ${{ github.event.workflow_run.id }} | tee parent-run-id.txt
+      - uses: actions/upload-artifact@v3
+        with:
+          name: parent-run-id
+          path: parent-run-id.txt
+  json:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: env
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT"
+  kill:
+    runs-on: ubuntu-22.04
+    needs: metadata
+    outputs:
+      # Outcome is before continue-on-error is appled and conclusion is after
+      status: ${{ steps.k_step.outcome }}
+    steps:
+      - name: Check out the repository under ${GITHUB_WORKSPACE}
+        uses: actions/checkout@v3
+      - name: kill if not latest
+        id: k_step
+        continue-on-error: true
+        run: |
+          source ./.github/workflows/scripts/block_and_check_if_largest.sh
+          block_and_check_if_largest ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} ${{ github.sha }} ${{ github.run_id }} 1
+  
+  afterWait:
+    name: after-wait
+    needs: [kill]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: github dump
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT"
+      - name: print kill status
+        run: echo ${{ needs.kill.outputs.status }}
+      - name: Cancel workflow if upstream workflow did not success
+        if: needs.kill.outputs.status != 'success'
+        uses: octokit/request-action@v2.x
+        with:
+          route: POST /repos/{repository}/actions/runs/{run_id}/cancel
+          repository: ${{ github.repository }}
+          run_id: ${{ github.run_id }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Dummy wait if things were not successful
+        if: needs.kill.outputs.status != 'success'
+        run: sleep 60
