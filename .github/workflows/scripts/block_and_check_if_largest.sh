@@ -1,5 +1,5 @@
 #!/bin/bash
-set -xu
+set -u
 
 _get_workflow_id() {
   WORKFLOW_RUN_ID=$1
@@ -9,7 +9,7 @@ _get_workflow_id() {
 _get_parent_run_id() {
   WORKFLOW_RUN_ID=$1
   if [[ $WORKFLOW_RUN_ID -eq $THIS_WORKFLOW_RUN_ID ]]; then
-    # Should be set outside of this script: THIS_WORKFLOW_PARENT_RUN_ID=${{ github.event.workflow_run.id }}
+    # Should be set outside of this script: export THIS_WORKFLOW_PARENT_RUN_ID=${{ github.event.workflow_run.id }}
     # This covers a special case where you cannot inspect the artifacts of the current ongoing run
     echo $THIS_WORKFLOW_PARENT_RUN_ID
     return
@@ -76,8 +76,9 @@ _get_workflow_tree() {
 block_and_check_if_largest() {
   if [[ $# -lt 4 || $# -gt 5 ]]; then
     echo $#
-    echo '_get_workflow_tree $GH_TOKEN $REPOSITORY $GITHUB_SHA $WORKFLOW_RUN_ID $EXPECTED_NUM_RUNS ${DELAY:-60}'
-    echo 'Example: _get_workflow_tree ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} ${{ github.sha }} ${{ github.run_id }} 60'
+    echo 'block_and_check_if_largest $GH_TOKEN $REPOSITORY $GITHUB_SHA $WORKFLOW_RUN_ID $EXPECTED_NUM_RUNS ${DELAY:-60}'
+    echo 'Example: block_and_check_if_largest ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} ${{ github.sha }} ${{ github.run_id }} 60'
+    echo 'Requires you to set the following outside this script: export THIS_WORKFLOW_PARENT_RUN_ID=${{ github.event.workflow_run.id }}'
     echo 'Exits 0 if it is the largest run_id'
     return 1
   fi
@@ -93,7 +94,7 @@ block_and_check_if_largest() {
 
   while true; do
     echo Sleeping for $DELAY sec
-    #sleep $DELAY ####DEBUG
+    sleep $DELAY
     workflows=$(_get_workflow_tree $GH_TOKEN $REPOSITORY $GITHUB_SHA $THIS_WORKFLOW_RUN_ID)
     num_workflows=$(echo "$workflows" | wc -l)
     largest_id=$(echo "$workflows" | cut -f1 | sort -nr | head -n1)
@@ -106,7 +107,6 @@ block_and_check_if_largest() {
       echo "This workflow run id is NOT the largest: $THIS_WORKFLOW_RUN_ID"
       exit 1
     fi
-    exit 0 ##DEBUGGGGGG
   done
 
 }
