@@ -1,5 +1,5 @@
 name: other great grandchild run
-run-name: OTHER Great GrandChild (${{ github.event_name == 'workflow_run' && format('nightly {0}', github.event.workflow_run.created_at) || github.event_name }})
+run-name: OTHER Great GrandChild (${{ github.event_name == 'workflow_run' && format('nightly {0}', github.event.workflow_run.created_at) || github.event_name }}) ${{ github.event.workflow_run.id }}
 
 on:
   workflow_run:
