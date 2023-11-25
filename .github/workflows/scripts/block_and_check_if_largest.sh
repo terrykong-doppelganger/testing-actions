@@ -34,7 +34,7 @@ _get_parent_run_id() {
 _get_root_run_id() {
   # Recursively search for the root. If the worfklow run name has the parent id, then no API request is needed
   WORKFLOW_RUN_ID=$1
-  WORKFLOW_RUN_NAME=$2
+  WORKFLOW_RUN_NAME=${2:-}
   ID_IN_NAME=$(echo "$WORKFLOW_RUN_NAME" | egrep -o 'parent_id=[0-9]+' | cut -d= -f2)
   if [[ -n $ID_IN_NAME ]]; then
     PARENT_ID=$ID_IN_NAME
@@ -49,10 +49,10 @@ _get_root_run_id() {
 }
 
 _get_workflow_tree() {
-  if [[ $# -ne 5 ]]; then
+  if [[ $# -ne 4 ]]; then
     echo $#
-    echo '_get_workflow_tree $GH_TOKEN $REPOSITORY $GITHUB_SHA $WORKFLOW_RUN_ID $WORKFLOW_RUN_NAME'
-    echo 'Example: _get_workflow_tree XXXXXXXXXXXX ${{github.repository}} ${{ github.sha }} 123456789 "Manifest Nightly Update parent_id=987654321"'
+    echo '_get_workflow_tree $GH_TOKEN $REPOSITORY $GITHUB_SHA $WORKFLOW_RUN_ID'
+    echo 'Example: _get_workflow_tree XXXXXXXXXXXX ${{github.repository}} ${{ github.sha }} 123456789'
     echo 'Returns: tsv with three columns (id, root_id, workflow_name)'
     return 1
   fi
@@ -60,9 +60,8 @@ _get_workflow_tree() {
   REPOSITORY=$2
   GITHUB_SHA=$3
   THIS_WORKFLOW_RUN_ID=$4
-  THIS_WORKFLOW_RUN_NAME=$5
 
-  THIS_ROOT_ID=$(_get_root_run_id $THIS_WORKFLOW_RUN_ID $THIS_WORKFLOW_RUN_NAME)
+  THIS_ROOT_ID=$(_get_root_run_id $THIS_WORKFLOW_RUN_ID)
   THIS_WORKFLOW_ID=$(_get_workflow_id $THIS_WORKFLOW_RUN_ID)
 
   curl -s -L -H "Authorization: Bearer $GH_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/$REPOSITORY/actions/runs?head_sha=$GITHUB_SHA&per_page=100" | jq -r '.workflow_runs[] | "\(.id)\t\(.workflow_id)\t\(.name)"' | sort -k1,1nr >&2 
