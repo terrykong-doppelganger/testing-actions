@@ -1,5 +1,5 @@
-name: other great grandchild run
-run-name: OTHER Great GrandChild (${{ github.event_name == 'workflow_run' && format('nightly {0}', github.event.workflow_run.created_at) || github.event_name }}) parent_id=${{ github.event.workflow_run.id }}
+name: Nightly Manifest Update
+run-name: Nightly Manifest Update (${{ github.event_name == 'workflow_run' && format('nightly {0}', github.event.workflow_run.created_at) || github.event_name }}) parent_id=${{ github.event.workflow_run.id }}
 
 on:
   workflow_run:
@@ -33,7 +33,6 @@ jobs:
           name: parent-run-id
           path: parent-run-id.txt
   metadata:
-    needs: save_parent
     runs-on: ubuntu-22.04
     steps:
       - name: env
@@ -65,14 +64,9 @@ jobs:
     needs: [kill]
     runs-on: ubuntu-22.04
     steps:
-      - name: github dump
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: |
-          echo "$GITHUB_CONTEXT"
       - name: print kill status
         run: echo ${{ needs.kill.outputs.status }}
-      - name: Cancel workflow if upstream workflow did not success
+      - name: Cancel workflow if this is not the most recent instance of this workflow
         if: needs.kill.outputs.status != 'success'
         uses: octokit/request-action@v2.x
         with:
