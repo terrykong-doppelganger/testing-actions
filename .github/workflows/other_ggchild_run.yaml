@@ -54,6 +54,7 @@ jobs:
         id: k_step
         continue-on-error: true
         run: |
+          export THIS_WORKFLOW_PARENT_RUN_ID=${{ github.event.workflow_run.id }}
           source ./.github/workflows/scripts/block_and_check_if_largest.sh
           echo block_and_check_if_largest ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} ${{ github.sha }} ${{ github.run_id }} 120
           block_and_check_if_largest ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} ${{ github.sha }} ${{ github.run_id }} 120

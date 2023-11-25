@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+set -xu
 
 _get_workflow_id() {
   WORKFLOW_RUN_ID=$1
@@ -8,8 +8,13 @@ _get_workflow_id() {
 
 _get_parent_run_id() {
   WORKFLOW_RUN_ID=$1
+  if [[ $WORKFLOW_RUN_ID -eq $THIS_WORKFLOW_RUN_ID ]]; then
+    # Should be set outside of this script: THIS_WORKFLOW_PARENT_RUN_ID=${{ github.event.workflow_run.id }}
+    # This covers a special case where you cannot inspect the artifacts of the current ongoing run
+    echo $THIS_WORKFLOW_PARENT_RUN_ID
+    return
+  fi
   
-  curl -s -L -H "Authorization: Bearer $GH_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/$REPOSITORY/actions/runs/$WORKFLOW_RUN_ID/artifacts" >&2
   download_url=$(curl -s -L -H "Authorization: Bearer $GH_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/$REPOSITORY/actions/runs/$WORKFLOW_RUN_ID/artifacts" | jq -r '.artifacts[] | select(.name == "parent-run-id") | .archive_download_url // ""')
   if [[ -z $download_url ]]; then
     echo ""
