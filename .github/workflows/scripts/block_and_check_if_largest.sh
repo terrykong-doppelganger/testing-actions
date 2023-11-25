@@ -7,6 +7,9 @@ _get_workflow_id() {
 }
 
 _get_parent_run_id() {
+  # This gets the parent run id in two ways:
+  #  1. If the input run id is the current run id, inspect the parent run id from an environment variable named THIS_WORKFLOW_PARENT_RUN_ID. It should be set with ${{ github.event.workflow_run.id }}
+  #  2. Otherwise, get parent id by downloading the artifact named "parent-run-id" which should be uploaded for all workflows
   WORKFLOW_RUN_ID=$1
   if [[ $WORKFLOW_RUN_ID -eq $THIS_WORKFLOW_RUN_ID ]]; then
     # Should be set outside of this script: export THIS_WORKFLOW_PARENT_RUN_ID=${{ github.event.workflow_run.id }}
@@ -32,7 +35,10 @@ _get_parent_run_id() {
 }
 
 _get_root_run_id() {
-  # Recursively search for the root. If the worfklow run name has the parent id, then no API request is needed
+  # Recursively search for the root run id. If the worfklow run name has the parent id,
+  #  then no API request is needed. The workflow run name is used in cases where other
+  #  instances of the workflow run have not completed, so their artifacts are not
+  #  available yet
   WORKFLOW_RUN_ID=$1
   WORKFLOW_RUN_NAME=${2:-}
   ID_IN_NAME=$(echo "$WORKFLOW_RUN_NAME" | egrep -o 'parent_id=[0-9]+' | cut -d= -f2)
@@ -49,13 +55,7 @@ _get_root_run_id() {
 }
 
 _get_workflow_tree() {
-  if [[ $# -ne 4 ]]; then
-    echo $#
-    echo '_get_workflow_tree $GH_TOKEN $REPOSITORY $GITHUB_SHA $WORKFLOW_RUN_ID'
-    echo 'Example: _get_workflow_tree XXXXXXXXXXXX ${{github.repository}} ${{ github.sha }} 123456789'
-    echo 'Returns: tsv with three columns (id, root_id, workflow_name)'
-    return 1
-  fi
+  # This will return all workflows that 
   GH_TOKEN=$1
   REPOSITORY=$2
   GITHUB_SHA=$3
@@ -64,9 +64,13 @@ _get_workflow_tree() {
   THIS_ROOT_ID=$(_get_root_run_id $THIS_WORKFLOW_RUN_ID)
   THIS_WORKFLOW_ID=$(_get_workflow_id $THIS_WORKFLOW_RUN_ID)
 
-  curl -s -L -H "Authorization: Bearer $GH_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/$REPOSITORY/actions/runs?head_sha=$GITHUB_SHA&per_page=100" | jq -r '.workflow_runs[] | "\(.id)\t\(.workflow_id)\t\(.name)"' | sort -k1,1nr >&2 
+  # Print all workflows
+  ALL_WORKFLOWS=$(curl -s -L -H "Authorization: Bearer $GH_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/$REPOSITORY/actions/runs?head_sha=$GITHUB_SHA&per_page=100" | jq -r '.workflow_runs[] | "\(.id)\t\(.workflow_id)\t\(.name)"' | sort -k1,1nr)
+  echo "[DEBUG]: START all workflows:" >&2
+  echo "$ALL_WORKFLOWS" >&2
+  echo "[DEBUG]: END all workflows:" >&2
   # TODO: Max is 100, but may need to use jq to combine
-  curl -s -L -H "Authorization: Bearer $GH_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/$REPOSITORY/actions/runs?head_sha=$GITHUB_SHA&per_page=100" | jq -r '.workflow_runs[] | "\(.id)\t\(.workflow_id)\t\(.name)"' | while IFS=$'\t' read -r run_id workflow_id workflow_name; do
+  echo "$ALL_WORKFLOWS" | while IFS=$'\t' read -r run_id workflow_id workflow_name; do
     if [[ $workflow_id != $THIS_WORKFLOW_ID ]]; then
       continue
     fi
@@ -83,7 +87,7 @@ _get_workflow_tree() {
 block_and_check_if_largest() {
   if [[ $# -lt 4 || $# -gt 5 ]]; then
     echo $#
-    echo 'block_and_check_if_largest $GH_TOKEN $REPOSITORY $GITHUB_SHA $WORKFLOW_RUN_ID $EXPECTED_NUM_RUNS ${DELAY:-60}'
+    echo 'block_and_check_if_largest $GH_TOKEN $REPOSITORY $GITHUB_SHA $WORKFLOW_RUN_ID ${DELAY:-60}'
     echo 'Example: block_and_check_if_largest ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} ${{ github.sha }} ${{ github.run_id }} 60'
     echo 'Requires you to set the following outside this script: export THIS_WORKFLOW_PARENT_RUN_ID=${{ github.event.workflow_run.id }}'
     echo 'Exits 0 if it is the largest run_id'
@@ -115,6 +119,5 @@ block_and_check_if_largest() {
       exit 1
     fi
   done
-
 }
 
