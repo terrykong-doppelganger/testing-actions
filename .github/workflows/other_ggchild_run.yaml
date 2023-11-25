@@ -4,8 +4,8 @@ run-name: OTHER Great GrandChild (${{ github.event_name == 'workflow_run' && for
 on:
   workflow_run:
     workflows:
-      - parent run
-      - child run
+      #- parent run
+      #- child run
       - grandchild run
     types: [completed]
     branches: [main]
