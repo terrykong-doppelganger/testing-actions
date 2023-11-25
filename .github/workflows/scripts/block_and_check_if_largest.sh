@@ -58,6 +58,7 @@ _get_workflow_tree() {
   THIS_ROOT_ID=$(_get_root_run_id $THIS_WORKFLOW_RUN_ID)
   THIS_WORKFLOW_ID=$(_get_workflow_id $THIS_WORKFLOW_RUN_ID)
 
+  curl -s -L -H "Authorization: Bearer $GH_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/$REPOSITORY/actions/runs?head_sha=$GITHUB_SHA&per_page=100" | jq -r '.workflow_runs[] | "\(.id)\t\(.workflow_id)\t\(.name)"' | sort -k1,1nr >&2 
   # TODO: Max is 100, but may need to use jq to combine
   curl -s -L -H "Authorization: Bearer $GH_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/$REPOSITORY/actions/runs?head_sha=$GITHUB_SHA&per_page=100" | jq -r '.workflow_runs[] | "\(.id)\t\(.workflow_id)\t\(.name)"' | while IFS=$'\t' read -r run_id workflow_id workflow_name; do
     if [[ $workflow_id != $THIS_WORKFLOW_ID ]]; then
