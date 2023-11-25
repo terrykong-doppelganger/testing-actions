@@ -82,6 +82,8 @@ block_and_check_if_largest() {
   NUM_DEPENDENCIES=$(curl -s $RAW_WORKFLOW_URL | yq '.on.workflow_run.workflows | length')
 
   while true; do
+    echo Sleeping for $DELAY sec
+    sleep $DELAY
     workflows=$(_get_workflow_tree $GH_TOKEN $REPOSITORY $GITHUB_SHA $THIS_WORKFLOW_RUN_ID)
     num_workflows=$(echo "$workflows" | wc -l)
     largest_id=$(echo "$workflows" | cut -f1 | sort -nr | head -n1)
@@ -93,12 +95,6 @@ block_and_check_if_largest() {
     elif [[ $largest_id -ne $THIS_WORKFLOW_RUN_ID ]]; then
       echo "This workflow run id is NOT the largest: $THIS_WORKFLOW_RUN_ID"
       exit 1
-    elif [[ $num_workflows -le 1 ]]; then
-      sleep $DELAY
-      continue
-    else
-      sleep $DELAY
-      continue
     fi
   done
 

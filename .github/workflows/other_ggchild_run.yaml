@@ -55,7 +55,7 @@ jobs:
         continue-on-error: true
         run: |
           source ./.github/workflows/scripts/block_and_check_if_largest.sh
-          block_and_check_if_largest ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} ${{ github.sha }} ${{ github.run_id }} 1800
+          block_and_check_if_largest ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} ${{ github.sha }} ${{ github.run_id }} 120
   
   afterWait:
     name: after-wait
