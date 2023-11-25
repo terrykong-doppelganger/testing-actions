@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 
 _get_workflow_id() {
   WORKFLOW_RUN_ID=$1
@@ -83,7 +84,7 @@ block_and_check_if_largest() {
 
   while true; do
     echo Sleeping for $DELAY sec
-    sleep $DELAY
+    #sleep $DELAY ####DEBUG
     workflows=$(_get_workflow_tree $GH_TOKEN $REPOSITORY $GITHUB_SHA $THIS_WORKFLOW_RUN_ID)
     num_workflows=$(echo "$workflows" | wc -l)
     largest_id=$(echo "$workflows" | cut -f1 | sort -nr | head -n1)
@@ -96,6 +97,7 @@ block_and_check_if_largest() {
       echo "This workflow run id is NOT the largest: $THIS_WORKFLOW_RUN_ID"
       exit 1
     fi
+    exit 0 ##DEBUGGGGGG
   done
 
 }
