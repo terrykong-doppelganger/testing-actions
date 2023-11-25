@@ -32,9 +32,15 @@ _get_parent_run_id() {
 }
 
 _get_root_run_id() {
-  # Recursively search for the root
+  # Recursively search for the root. If the worfklow run name has the parent id, then no API request is needed
   WORKFLOW_RUN_ID=$1
-  PARENT_ID=$(_get_parent_run_id $WORKFLOW_RUN_ID)
+  WORKFLOW_RUN_NAME=$2
+  ID_IN_NAME=$(echo "$WORKFLOW_RUN_NAME" | egrep -o 'parent_id=[0-9]+' | cut -d= -f2)
+  if [[ -n $ID_IN_NAME ]]; then
+    PARENT_ID=$ID_IN_NAME
+  else
+    PARENT_ID=$(_get_parent_run_id $WORKFLOW_RUN_ID)
+  fi
   while [[ -n $PARENT_ID ]]; do
     WORKFLOW_RUN_ID=$PARENT_ID
     PARENT_ID=$(_get_parent_run_id $PARENT_ID)
@@ -65,7 +71,7 @@ _get_workflow_tree() {
       continue
     fi
 
-    root_id=$(_get_root_run_id "$run_id")
+    root_id=$(_get_root_run_id "$run_id" "$workflow_name")
     if [[ $root_id != $THIS_ROOT_ID ]]; then
       continue
     fi
