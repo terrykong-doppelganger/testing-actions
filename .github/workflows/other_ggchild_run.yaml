@@ -44,6 +44,7 @@ jobs:
   kill:
     runs-on: ubuntu-22.04
     needs: metadata
+    timeout-minutes: 10  # just to make sure dont use too many minutes
     outputs:
       # Outcome is before continue-on-error is appled and conclusion is after
       status: ${{ steps.k_step.outcome }}
