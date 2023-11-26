@@ -22,7 +22,7 @@ check_workflow_status() {
     parent_id=$(_get_parent_run_id $run_id)
     parent_workflow_json=$(_get_workflow_json $parent_id)
     parent_conclusion=$(echo "$parent_workflow_json" | jq -r '.conclusion')
-    parent_workflow_name=$(echo "$parent_workflow_json" | jq -r '.conclusion')
+    parent_workflow_name=$(echo "$parent_workflow_json" | jq -r '.name')
     printf "%s\t%s\t%s\t%s\n" "$run_id" "$parent_id" "$parent_conclusion" "$parent_workflow_name"
   done
   )
