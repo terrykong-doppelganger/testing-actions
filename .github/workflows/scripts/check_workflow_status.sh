@@ -17,7 +17,7 @@ check_workflow_status() {
 
   workflows=$(_get_workflow_tree $GH_TOKEN $REPOSITORY $GITHUB_SHA $THIS_WORKFLOW_RUN_ID)
   table=$(
-  echo -e "run_id\tparent_id\tparent_conclusion\troot_id\tworkflow_id\tworkflow_name"
+  echo -e "run_id\tparent_id\tparent_conclusion\tparent_workflow_name"
   echo "$workflows" | while IFS=$'\t' read -r run_id root_id workflow_id workflow_name; do
     parent_id=$(_get_parent_run_id $run_id)
     parent_workflow_json=$(_get_workflow_json $parent_id)
