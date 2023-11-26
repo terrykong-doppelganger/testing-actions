@@ -79,6 +79,7 @@ jobs:
         if: needs.kill.outputs.status != 'success'
         run: sleep 60
       - name: Check parent statuses
+        shell: bash -ex {0}
         run: |
           export THIS_WORKFLOW_PARENT_RUN_ID=${{ github.event.workflow_run.id }}
           source ./.github/workflows/scripts/check_workflow_status.sh
