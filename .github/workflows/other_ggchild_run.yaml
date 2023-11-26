@@ -81,7 +81,6 @@ jobs:
       - name: Check out the repository under ${GITHUB_WORKSPACE}
         uses: actions/checkout@v3
       - name: Check parent statuses
-        shell: bash -ex {0}
         run: |
           export THIS_WORKFLOW_PARENT_RUN_ID=${{ github.event.workflow_run.id }}
           source ./.github/workflows/scripts/check_workflow_status.sh
