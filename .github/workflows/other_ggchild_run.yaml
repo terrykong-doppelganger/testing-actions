@@ -43,7 +43,7 @@ jobs:
   kill:
     runs-on: ubuntu-22.04
     needs: metadata
-    timeout-minutes: 10  # just to make sure dont use too many minutes
+    timeout-minutes: 3  # just to make sure dont use too many minutes
     outputs:
       # Outcome is before continue-on-error is appled and conclusion is after
       status: ${{ steps.k_step.outcome }}
@@ -56,8 +56,8 @@ jobs:
         run: |
           export THIS_WORKFLOW_PARENT_RUN_ID=${{ github.event.workflow_run.id }}
           source ./.github/workflows/scripts/block_and_check_if_largest.sh
-          echo block_and_check_if_largest ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} ${{ github.sha }} ${{ github.run_id }} 120
-          block_and_check_if_largest ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} ${{ github.sha }} ${{ github.run_id }} 120
+          echo block_and_check_if_largest ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} ${{ github.sha }} ${{ github.run_id }} 30
+          block_and_check_if_largest ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} ${{ github.sha }} ${{ github.run_id }} 30
   
   afterWait:
     name: after-wait
