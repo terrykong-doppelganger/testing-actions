@@ -20,8 +20,10 @@ check_workflow_status() {
   echo -e "run_id\tparent_id\tparent_conclusion\troot_id\tworkflow_id\tworkflow_name"
   echo "$workflows" | while IFS=$'\t' read -r run_id root_id workflow_id workflow_name; do
     parent_id=$(_get_parent_run_id $run_id)
-    parent_conclusion=$(_get_workflow_json $parent_id | jq -r '.conclusion')
-    printf "%s\t%s\t%s\t%s\t%s\t%s\n" "$run_id" "$parent_id" "$parent_conclusion" "$root_id" "$workflow_id" "$workflow_name"
+    parent_workflow_json=$(_get_workflow_json $parent_id)
+    parent_conclusion=$(echo "$parent_workflow_json" | jq -r '.conclusion')
+    parent_workflow_name=$(echo "$parent_workflow_json" | jq -r '.conclusion')
+    printf "%s\t%s\t%s\t%s\n" "$run_id" "$parent_id" "$parent_conclusion" "$parent_workflow_name"
   done
   )
   if [[ -z "${GITHUB_STEP_SUMMARY:-}" ]]; then
