@@ -2,10 +2,6 @@
 
 source $( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )/block_and_check_if_largest.sh
 
-_tsv_to_markdown() {
-  sed 's/^/| /; s/$/ |/; s/\t/ | /g' | awk 'NR==1 {print; print "| --- | --- | --- |"} NR!=1'
-}
-
 check_workflow_status() {
   if [[ $# -ne 4 ]]; then
     echo 'check_workflow_status $GH_TOKEN $REPOSITORY $GITHUB_SHA $WORKFLOW_RUN_ID ${DELAY:-60}'
@@ -31,7 +27,10 @@ check_workflow_status() {
   if [[ -z "${GITHUB_STEP_SUMMARY:-}" ]]; then
     echo "$table"
   else
-    echo "$table" | _tsv_to_markdown | tee $GITHUB_STEP_SUMMARY
+    echo "$table" \
+      | sed 's/^/| /; s/$/ |/; s/\t/ | /g' \
+      | awk 'NR==1 {n=split($0, a, "|"); header="|"; for (i=2; i<n; i++) header=header" --- |"; print; print header} NR!=1' \
+      | tee $GITHUB_STEP_SUMMARY
   fi
   
   # Overall success only if all parent runs were success
