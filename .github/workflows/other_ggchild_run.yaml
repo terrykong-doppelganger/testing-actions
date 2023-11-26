@@ -78,3 +78,9 @@ jobs:
       - name: Dummy wait if things were not successful
         if: needs.kill.outputs.status != 'success'
         run: sleep 60
+      - name: Check parent statuses
+        run: |
+          export THIS_WORKFLOW_PARENT_RUN_ID=${{ github.event.workflow_run.id }}
+          source ./.github/workflows/scripts/check_workflow_status.sh
+          echo check_workflow_status ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} ${{ github.sha }} ${{ github.run_id }}
+          check_workflow_status ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} ${{ github.sha }} ${{ github.run_id }}
